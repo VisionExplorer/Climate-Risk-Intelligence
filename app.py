@@ -125,5 +125,12 @@ for col, c in zip(cols, city_data):
         m2.metric("Rainfall 48h (mm)", c["rainfall_last_48h_mm"])
         m2.metric("Soil Moisture (m³/m³)", c["soil_moisture"])
         m2.metric("Wind Gusts (km/h)", c["wind_gusts_kmh"])
-
+          # ---- NEW: Alert pipeline simulation ----
+        if c["score"] >= 70:
+            st.error(f"🚨 ALERT TRIGGERED: Simulated SMS/community alert dispatched to local wards and disaster management authority")
+        elif c["score"] >= 40:
+            st.warning(f"⚠️ WATCH STATUS: Monitoring team notified, community on standby")
+        else:
+            st.success(f"✅ No alert action needed")
+       
         st.caption(f"City local time: {c['local_time']} ({c['timezone_label']})")
