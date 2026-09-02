@@ -1,0 +1,27 @@
+Running locally
+bash
+pip install -r requirements.txt
+streamlit run app.py
+
+Deployment
+
+Deployed on Streamlit Community Cloud:
+
+Push app.py + requirements.txt to a GitHub repo
+Connect the repo on share.streamlit.io
+Streamlit Cloud installs dependencies automatically and gives a public URL
+
+add your deployed link here once live
+
+Known limitations (current prototype)
+Risk scoring is rule-based (thresholds), not yet trained on historical disaster data.
+No live river water-level data — flood risk is inferred from rainfall + soil moisture as a scientifically valid proxy, since most free global APIs don't expose river-gauge data.
+Only 2 cities currently; architecture is designed to generalize to more regions and disaster types (see diagram in concept deck).
+Next steps (if selected for pilot)
+Train per-disaster-type models (flood, landslide, heatwave, wildfire) on historical datasets (EM-DAT, USGS, IBTrACS, NASA FIRMS) instead of relying solely on rule-based thresholds.
+Add satellite imagery analysis (Google Earth Engine / Sentinel-2) for visual confirmation of flood extent / vegetation stress.
+Partner with local government/hydrology agencies for real river-level and ground-sensor data.
+Expand to additional vulnerable regions and disaster types using the same modular architecture.
+Event context
+
+Built for the Innovate4Cities AI x City Climate Action Hackathon 2026, under the "Informal or Marginalised Settlements" priority theme.
