@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import pydeck as pdk
+import joblib
 
 st.set_page_config(page_title="Climate Disaster Early Warning", layout="wide")
 
@@ -34,19 +35,25 @@ def get_live_data(lat, lon):
         "timezone_label": data["timezone_abbreviation"],
     }
 
-def compute_flood_risk(d):
-    score = 0
-    if d["rainfall_last_48h_mm"] > 100: score += 40
-    elif d["rainfall_last_48h_mm"] > 50: score += 25
-    elif d["rainfall_last_48h_mm"] > 20: score += 10
-    if d["soil_moisture"] is not None:
-        if d["soil_moisture"] > 0.35: score += 30
-        elif d["soil_moisture"] > 0.25: score += 15
-    if d["current_rain_mm"] > 5: score += 20
-    elif d["current_rain_mm"] > 1: score += 10
-    if d["wind_gusts_kmh"] > 60: score += 10
-    return min(score, 100)
+               # ---- Load trained models once (cached across refreshes) ----
+@st.cache_resource
+def load_models():
+    chennai_model = joblib.load("chennai_flood_model.pkl")
+    manila_model = joblib.load("manila_flood_model.pkl")
+    return {"Chennai, India": chennai_model, "Manila, Philippines": manila_model}
 
+models = load_models()
+
+def compute_flood_risk_ml(city_name, live_data):
+    model = models[city_name]
+    features = pd.DataFrame([{
+        "precipitation_sum": live_data["rainfall_last_48h_mm"],
+        "soil_moisture_0_to_10cm_mean": live_data["soil_moisture"],
+        "wind_gusts_10m_max": live_data["wind_gusts_kmh"],
+    }])
+    probability = model.predict_proba(features)[0][1]  # probability of "high risk" class
+    return round(probability * 100)
+    
 def risk_label(score):
     if score >= 70: return "HIGH", "#8B0000", "⚠️ Flood/Landslide Risk"
     elif score >= 40: return "MODERATE", "#D9822B", "🌧️ Heavy Rain"
@@ -63,7 +70,7 @@ if st.button("🔄 Refresh Live Data"):
 city_data = []
 for city, info in regions.items():
     live = get_live_data(info["lat"], info["lon"])
-    score = compute_flood_risk(live)
+    score = compute_flood_risk_ml(city, live)
     label, color, condition_icon = risk_label(score)
     city_data.append({
         "city": city, "lat": info["lat"], "lon": info["lon"],
